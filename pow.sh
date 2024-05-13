@@ -8,7 +8,7 @@ SCREEN="/sys/class/backlight/intel_backlight/brightness"
 LOW_BAT_PERCENT=20
 
 AC_PROFILE="performance"
-BAT_PROFILE="power-saver"
+BAT_PROFILE="balanced"
 LOW_BAT_PROFILE="power-saver"
 
 HIGH_SCREEN=16961
@@ -40,20 +40,25 @@ while true; do
     profile=$AC_PROFILE
     BRIGHTNESS=$HIGH_SCREEN
   fi
-  echo "Brightness > $BRIGHTNESS"
-  if [[ -z "${DY_LIGHT+x}" ]]; then
-    echo "nope"
+
+  if [ -z ${DY_LIGHT+x} ]; then
+    echo "No DY_LIGHTm set"
   else
-    echo "settt ---"
+    echo "Set DY_LIGHT"
     BRIGHTNESS=$DY_LIGHT
   fi
-  if [ -z "${DY_POWER+x}" ]; then
-    BRIGHTNESS=$DY_POWER
+  if [ -z ${DY_POWER+x} ]; then
+    echo "No DY_POWER set"
+  else
+    echo "Set DY_POWER"
+    profile=$DY_POWER
   fi
-  echo "Bat status $BAT_STATUS > $(cat "$BAT_STATUS")"
-  echo "Brightness $BRIGHTNESS"
+
+  echo "Brightness: $BRIGHTNESS"
+  echo "Power profile: $profile"
+
   if [[ $prevB != "$BRIGHTNESS" ]]; then
-    echo $SP | sudo -S sh -c "echo $BRIGHTNESS | sudo tee $SCREEN"
+    echo $SP | sudo -S sh -c "echo $BRIGHTNESS | sudo tee /sys/class/backlight/intel_backlight/brightness"
   fi
 
   # set the new profile
@@ -65,4 +70,5 @@ while true; do
   prevB=$BRIGHTNESS
   # wait for the next power change event
   inotifywait -qq "$BAT_STATUS" "$BAT_CAP"
+  date +"%T"
 done
